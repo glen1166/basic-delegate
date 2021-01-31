@@ -3,15 +3,22 @@ using System.Linq;
 
 public class Program
 {
-    static string ReverseString(string s)
+    static void  ReverseString(string s)
     {
-        return new string(s.Reverse().ToArray());
+        var str= new string(s.Reverse().ToArray());
+	Console.WriteLine(str);
+    }
+
+    static void PrintString(string s)
+    {
+	Console.WriteLine(s);
     }
 
     static void Main(string[] args)
     {
-        Func<string, string> rev = ReverseString;
-
-        Console.WriteLine(rev("a string"));
+        Action<string> rev = ReverseString;
+	Action<string> pri = PrintString;
+	Action<string> comb = (Action<string>)Delegate.Combine(rev, pri);
+	comb("Hello World!");
     }
 }
