@@ -1,68 +1,76 @@
 ﻿using System;
+using System.ComponentModel;
+namespace eventproperty{
 
-namespace ConsoleApplication1
-{
-    class Program
-    {
-        static void Main(string[] args)
-        {
-            Counter c = new Counter(new Random().Next(10));
-            c.ThresholdReached += c_ThresholdReached;
+	class Program
+	{
+		static void Main(string[] args){
+			SampleControl control = new SampleControl();
+			control.LightWentOn += (obj, para)=>{
+				Console.WriteLine("light went on.");
+			};
 
-            Console.WriteLine("press 'a' key to increase total");
-            while (Console.ReadKey(true).KeyChar == 'a')
-            {
-                Console.WriteLine("adding one");
-                c.Add(1);
-            }
-        }
+			control.LightWentOut += (obj, para)=>{
+				Console.WriteLine("light went out.");
+			};
+			
+			control.FireEvent();
+		}
+	}
 
-        static void c_ThresholdReached(object sender, ThresholdReachedEventArgs e)
-        {
-            Console.WriteLine("The threshold of {0} was reached at {1}.", e.Threshold,  e.TimeReached);
-            Environment.Exit(0);
-        }
-    }
+	public	class SampleControl : Component
+	{
 
-    class Counter
-    {
-        private int threshold;
-        private int total;
+		protected EventHandlerList listEventDelegates = new EventHandlerList();
 
-        public Counter(int passedThreshold)
-        {
-            threshold = passedThreshold;
-        }
+		// Define a unique key for each event.
+		static readonly object lightWentOn = new object();
+		static readonly object lightWentOut = new object();
 
-        public void Add(int x)
-        {
-            total += x;
-            if (total >= threshold)
-            {
-                ThresholdReachedEventArgs args = new ThresholdReachedEventArgs();
-                args.Threshold = threshold;
-                args.TimeReached = DateTime.Now;
-                OnThresholdReached(args);
-            }
-        }
+		public event EventHandler LightWentOn
+		{
+			// Add the input delegate to the collection.
+			add
+			{
+				listEventDelegates.AddHandler(lightWentOn, value);
+			}
+			// Remove the input delegate from the collection.
+			remove
+			{
+				listEventDelegates.RemoveHandler(lightWentOn, value);
+			}
+		}
 
-        protected virtual void OnThresholdReached(ThresholdReachedEventArgs e)
-        {
-            EventHandler<ThresholdReachedEventArgs> handler = ThresholdReached;
-            if (handler != null)
-            {
-                handler(this, e);
-            }
-        }
+		private void OnLightWentOn(EventArgs e)
+		{
+			EventHandler lightWentOnDelegate = (EventHandler)listEventDelegates[lightWentOn];
+			lightWentOnDelegate(this, e);
+		}
 
-        public event EventHandler<ThresholdReachedEventArgs> ThresholdReached;
-    }
+		public event EventHandler LightWentOut
+		{
+			// Add the input delegate to the collection.
+			add
+			{
+				listEventDelegates.AddHandler(lightWentOut, value);
+			}
+			// Remove the input delegate from the collection.
+			remove
+			{
+				listEventDelegates.RemoveHandler(lightWentOut, value);
+			}
+		}
 
-    public class ThresholdReachedEventArgs : EventArgs
-    {
-        public int Threshold { get; set; }
-        public DateTime TimeReached { get; set; }
-    }
+		private void OnLightWentOut(EventArgs e)
+		{
+			EventHandler lightWentOutDelegate = (EventHandler)listEventDelegates[lightWentOut];
+			lightWentOutDelegate(this, e);
+		}
+
+		public void FireEvent(){
+			var arg = new EventArgs();
+			OnLightWentOn(arg);
+			OnLightWentOut(arg);
+		}
+	}
 }
-
-
